@@ -7,7 +7,9 @@ For me personally, the second count was much bigger than the first. Hence, this.
 `clipstack` stores your clipboard contents in a stack. Copying text pushes to the stack. Pasting pops it. As simple as that!  
 Did you actually want to paste that thing at two places? No worries, just copy it twice!
 
-![demo](./demo.gif)
+![demo](.demos/demo.gif)
+
+High quality original speed video [here](.demos/demo.mp4)
 
 # Features
  - Pushes whatever you copy to a stack. Pasting pops it from the stack.
