@@ -116,16 +116,14 @@ class Clipboard:
         # 'paste'. However, these applications fail on their second request
         # and nothing actually gets pasted
         #
-        # to overcome this, im implementing some kind of debouncing
-        # so that if the same requests are given in around the same
-        # timestamp from the same client with no TARGETS request
-        # in the middle, i assume its just them asking for the same
-        # thing again
-        prev_event = None
+        # sometimes, they ask for different types as well
+        # all requests look like a bunch of `TARGET`s and then a bunch of
+        # actual content requests. so if we clear on the next `TARGET`, it
+        # should be safe
+        prev_did_paste = False
 
         while True:
             xev = self.display.next_event()
-            content_was_consumed = False
 
             if (
                 xev.type == X.SelectionRequest
@@ -136,39 +134,25 @@ class Clipboard:
                 client_name = client.get_wm_name()
                 logger.info("%s sent a selection request", client_name)
 
+                # something else is being pasted now
+                if prev_did_paste and xev.target == self.targets_atom:
+                    self.content_manager.on_consume()
+
                 if xev.property == X.NONE:
                     client_prop = xev.target
                 else:
                     client_prop = xev.property
 
-                if prev_event is not None:
-                    is_name_same = client_name == prev_event["client_name"]
-                    was_prev_target_query = prev_event["target"] == self.targets_atom
-                    is_close_chronologically = prev_event["time"] == xev.time
-                    is_same_target = prev_event["target"] == xev.target
-
-                    if (
-                        is_name_same
-                        and is_close_chronologically
-                        and is_same_target
-                        and not was_prev_target_query
-                    ):
-                        logger.info("Looks like a repeat. Sending prev data")
-                        # probably is the same thing again
-                        self.provide_selection_content(
-                            client, client_prop, prev_event["details"], xev
-                        )
-                        continue
-
                 logger.info("Request for %s", self.display.get_atom_name(xev.target))
                 if xev.target == self.targets_atom:
                     logger.info("%s queried for available targets", client_name)
                     details = self.handle_targets_query()
+                    prev_did_paste = False
                 else:
                     try:
                         logger.info("Trying to get selection contents...")
                         details = self.handle_paste_request(xev.target)
-                        content_was_consumed = True
+                        prev_did_paste = True
                         logger.info("Success")
                     except BadSelectionRequestError:
                         logger.warning(
@@ -179,15 +163,6 @@ class Clipboard:
                         details = self.handle_bad_request()
 
                 self.provide_selection_content(client, client_prop, details, xev)
-                prev_event = {
-                    "time": xev.time,
-                    "client_name": client_name,
-                    "target": xev.target,
-                    "details": details,
-                }
-
-                if content_was_consumed:
-                    self.content_manager.on_consume()
             elif (
                 xev.type == X.SelectionClear
                 and xev.window == self.window
