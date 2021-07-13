@@ -6,6 +6,7 @@ from Xlib.display import Display
 
 logger = logging.getLogger("clipstack.content_manager")
 
+
 class ContentManager(ABC):
     def __init__(self):
         pass
@@ -50,7 +51,10 @@ class StackContentManager(ContentManager):
         # need this for the default case
         display = Display()
         string_atom = display.get_atom("STRING")
-        self.default_content = {string_atom: b"", display.get_atom("TARGETS"): [string_atom]}
+        self.default_content = {
+            string_atom: b"",
+            display.get_atom("TARGETS"): [string_atom],
+        }
 
     def put(self, data: dict):
         logger.info("Data was added")
@@ -82,7 +86,10 @@ class RegularContentManager(ContentManager):
         # need this for the default case
         display = Display()
         string_atom = display.get_atom("STRING")
-        self.default_content = {string_atom: b"", display.get_atom("TARGETS"): [string_atom]}
+        self.default_content = {
+            string_atom: b"",
+            display.get_atom("TARGETS"): [string_atom],
+        }
 
         self.data = self.default_content
 
