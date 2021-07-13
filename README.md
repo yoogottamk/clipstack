@@ -36,7 +36,8 @@ There is no configuration file. If you want `clipstack` to behave differently, y
 # Issues
    - [`INCR`](https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html#incr_properties) and maybe more protocols that I don't even know about are not supported by both `ClipboardSpy` and `Clipboard`. Without `INCR`, it might not be possible to copy/paste very large chunks.
  - Images don't work for now and `clipstack` actively ignores it. When you copy an image, `clipstack` will stop running until you copy a supported content again. For now, [only images are being ignored](./clipstack/__main__.py). If you find another type that is not supported, kindly open an issue (or a PR 😛).
- - A [very weird hack](https://github.com/YoogottamK/clipstack/blob/871f4e95594d1995c9cbb80d09c44ebe3c7afe18/clipstack/clipboard.py#L106-L124) is being used right now for handling "duplicate" requests. I don't understand why applications are requesting for the same selection multiple times.
+ - Applications are weird. None of them follow a consistent selection request pattern. A [very weird hack](./clipstack/clipboard.py) [check function `_check_update_contents`] had to be used in order to get around this problem. A consequence of this hack is that pasting multiple times "very fast" is not supported. Currently, the timeout is 200ms but I might change it if I find that this is too short or too long.
+ - The interface for [`clipboard.py`](./clipstack/clipboard.py) is bad, it should be as easy to use as `ClipboardSpy`.
  - Not memory efficient. Maybe someone only copies and never pastes? They would fill the stack without emptying it and it might take a lot of memory. I don't see this happening in a normal scenario though.
 
 ### Aside
